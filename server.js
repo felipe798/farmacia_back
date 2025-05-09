@@ -1,15 +1,21 @@
 import express from "express";
 import cors from "cors";
+import dotenv from 'dotenv';
 import db from "./app/models/index.js";
 import authRoutes from "./app/routes/auth.routes.js";
 import userRoutes from "./app/routes/user.routes.js";
 import farmaciaRoutes from "./app/routes/farmacia.routes.js";
 import bcrypt from "bcryptjs";
 
+// Cargar variables de entorno
+dotenv.config();
+
 const app = express();
 
+// Configuración CORS para permitir solicitudes del frontend
 const corsOptions = {
-  origin: "http://localhost:3000" // URL de tu frontend
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ["http://localhost:3000"],
+  credentials: true
 };
 
 app.use(cors(corsOptions));
@@ -30,26 +36,35 @@ authRoutes(app);
 userRoutes(app);
 farmaciaRoutes(app);
 
-// Puerto
+// Puerto - utiliza la variable de entorno PORT si está disponible
 const PORT = process.env.PORT || 8080;
 
 // Secuencia de inicialización
 async function inicializarBaseDeDatos() {
   try {
-    // Sincronizar base de datos (SOLO UNA VEZ)
-    await db.sequelize.sync({ force: true });
-    console.log("Eliminando y re-sincronizando la base de datos.");
+    // Determinar si se debe resetear la base de datos
+    // En producción, es mejor usar { force: false }
+    const shouldReset = process.env.NODE_ENV === 'production' ? false : true;
     
-    // Crear roles
-    await initial();
+    // Sincronizar base de datos
+    await db.sequelize.sync({ force: shouldReset });
     
-    // Crear datos de prueba
-    await inicializarDatosDePrueba();
-    
-    // Crear usuario administrador
-    await crearUsuarioAdmin();
-    
-    console.log("Base de datos inicializada correctamente");
+    if (shouldReset) {
+      console.log("Eliminando y re-sincronizando la base de datos.");
+      
+      // Crear roles
+      await initial();
+      
+      // Crear datos de prueba
+      await inicializarDatosDePrueba();
+      
+      // Crear usuario administrador
+      await crearUsuarioAdmin();
+      
+      console.log("Base de datos inicializada correctamente");
+    } else {
+      console.log("Base de datos sincronizada sin reset.");
+    }
   } catch (error) {
     console.error("Error al inicializar la base de datos:", error);
   }

@@ -1,13 +1,14 @@
 export default {
-  HOST: "dpg-d0e3f5gdl3ps73bac4k0-a.oregon-postgres.render.com", // Completa aquí con el hostname real de Render
-  USER: "root", // Reemplaza con tu nombre de usuario real
-  PASSWORD: "3y8XhLvvEAkZWbzPXZE56XWWtQyfvvGa",
-  DB: "bd_farmacia",
-  dialect: "postgres",
+  HOST: process.env.DB_HOST || "localhost",
+  USER: process.env.DB_USER || "root",
+  PASSWORD: process.env.DB_PASSWORD || "",
+  DB: process.env.DB_NAME || "bd_farmacia",
+  PORT: process.env.DB_PORT || 5432,
+  dialect: process.env.DB_DIALECT || "postgres",
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false // Necesario para conexiones a bases de datos en Render
+      rejectUnauthorized: false
     }
   },
   pool: {
