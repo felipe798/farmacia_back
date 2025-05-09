@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import db from "./app/models/index.js";
 import authRoutes from "./app/routes/auth.routes.js";
 import userRoutes from "./app/routes/user.routes.js";
