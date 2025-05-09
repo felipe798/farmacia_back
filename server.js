@@ -14,7 +14,7 @@ const app = express();
 
 // Configuración CORS para permitir solicitudes del frontend
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ["http://localhost:3000"],
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ["https://front-lab08.onrender.com"],
   credentials: true
 };
 
