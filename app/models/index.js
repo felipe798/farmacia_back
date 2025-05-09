@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import config from "../config/db.config.js";
+import bcrypt from "bcryptjs"; // Asegúrate de instalar bcryptjs
 
 import defineUser from "./user.model.js";
 import defineRole from "./role.model.js";
@@ -15,6 +16,7 @@ const sequelize = new Sequelize(
   {
     host: config.HOST,
     dialect: config.dialect,
+    dialectOptions: config.dialectOptions,
     pool: {
       max: config.pool.max,
       min: config.pool.min,
@@ -64,5 +66,57 @@ db.medicamento.hasMany(db.detalleOrdenCompra, { foreignKey: 'medicamentoId' });
 db.detalleOrdenCompra.belongsTo(db.medicamento, { foreignKey: 'medicamentoId' });
 
 db.ROLES = ["user", "admin", "moderator"];
+
+// Función para inicializar la base de datos con roles y usuario admin
+db.inicializarBD = async () => {
+  try {
+    // Inicializar roles
+    await db.role.bulkCreate([
+      { id: 1, name: "user" },
+      { id: 2, name: "moderator" },
+      { id: 3, name: "admin" }
+    ]);
+    
+    console.log("Roles creados exitosamente");
+    
+    // Crear usuario admin
+    const adminUsername = "admin";
+    const adminEmail = "admin@farmacia.com";
+    const adminPassword = "Admin123!";
+    
+    // Encriptar manualmente la contraseña para asegurar compatibilidad
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(adminPassword, salt);
+    
+    // Verificar si el usuario ya existe
+    const existingUser = await db.user.findOne({
+      where: { username: adminUsername }
+    });
+    
+    if (!existingUser) {
+      // Crear usuario admin
+      const adminUser = await db.user.create({
+        username: adminUsername,
+        email: adminEmail,
+        password: hashedPassword
+      });
+      
+      // Asignar rol de admin
+      await adminUser.setRoles([3]); // El ID 3 es para el rol "admin"
+      
+      console.log("Usuario administrador creado exitosamente:");
+      console.log("- Username:", adminUsername);
+      console.log("- Email:", adminEmail);
+      console.log("- Password:", adminPassword);
+    } else {
+      console.log("El usuario administrador ya existe");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error al inicializar la base de datos:", error);
+    return false;
+  }
+};
 
 export default db;
